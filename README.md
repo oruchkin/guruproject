@@ -30,6 +30,15 @@ docker exec -it infra_backend_1 python manage.py collectstatic
 - ``GET /city/city_id/street/`` — получение всех улиц города; (city_id — идентификатор города)
 - ``POST /shop/`` — создание магазина; Данный метод получает json c объектом магазина, в
   ответ возвращает id созданной записи.
+    
+     Передаем сюда следующие параметры:
+    - ```title: (string)``` = название магазина (Ашан)
+    - ```city:  (integer)``` = id города (1,5,8)
+    - ```house: (string)``` = номер дома (1,2, 55a)
+    - ```street: (integer)``` = id улица (1,5,8
+    - ```time_open: (string)``` = время открытия магазина (hh:mm) (07:55)
+    - ```time_closed: (string)``` = время закрытия магазина (hh:mm) (22:15)
+
 - ``GET /shop/?street=&city=&open=0/1&time=10:00`` — получение списка магазинов:
 
   - I. Метод принимает параметры для фильтрации. Параметры не обязательны. В
@@ -49,4 +58,4 @@ docker exec -it infra_backend_1 python manage.py collectstatic
 
 Так же в контейнере установлена база данных PostgreSQL (которая рекомендована в т.з), она не используется по умолчанию так как в нее нужно дополнительно вносить обьекты (что не удобно) для этого используется SQLite3 чтобы сьекономить время для тестов.
 
-Переключиться на PostgreSQL можно в настройках в папке ``/backend/guruproject/components/databases.py`` там нужно раскоментировать настройки для postgresql, и закоменитровать для sqlite3, и пересобрать контейнер. Но в рамках тестового для экономии времени используем SQLite3.
+Переключиться на PostgreSQL можно в настройках в папке ``/backend/guruproject/components/databases.py`` там нужно раскоментировать настройки для postgresql, и закоменитровать для sqlite3, и пересобрать контейнер, потом еще нужно сделать миграции ```docker exec -it infra_backend_1 python manage.py migrate``` и создать админа ```docker exec -it infra_backend_1 python manage.py createsuperuser```. Но в рамках тестового для экономии времени используем SQLite3.
