@@ -50,6 +50,7 @@ class New_shop(APIView):
         city = request.query_params.get('city')
         open = request.query_params.get('open')
         street = request.query_params.get('street')
+        time = request.query_params.get('time')
         if city:
             city = get_object(City,city)
             if not city:
@@ -61,25 +62,31 @@ class New_shop(APIView):
                 return Response({"error":"улица не найдена"}, status=status.HTTP_400_BAD_REQUEST)
 
         now = datetime.datetime.now()
-        now = datetime.time(hour=20, minute=32)
+        if time:
+            t=time.split(":")
+            now = datetime.time(hour=int(t[0]), minute=int(t[1]))
         time_now = f"{now.hour}:{now.minute}:{now.second}"
 
         #фильтры:
         if city and street and open == "1":
             nigth_shit_queryset = Shop.objects.filter(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now), 
                                                       Q(city=city), Q(street=street))
+            nigth_shit_queryset = Shop.objects.filter(Q(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now)),
+                                                      Q(city=city), Q(street=street) | 
+                                                      Q(Q(time_open__gt=F('time_closed')), Q(time_open__lt=time_now)), 
+                                                      Q(city=city), Q(street=street))
             day_shift_queryset = Shop.objects.filter(time_open__lt=time_now, time_closed__gt=time_now, city=city, street=street) 
             queryset = list(chain(nigth_shit_queryset, day_shift_queryset))
 
         elif city and open == "1":
-            nigth_shit_queryset = Shop.objects.filter(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now),
-                                                      Q(city=city))
+            nigth_shit_queryset = Shop.objects.filter(Q(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now)),Q(city=city) | 
+                                                      Q(Q(time_open__gt=F('time_closed')), Q(time_open__lt=time_now)), Q(city=city))
             day_shift_queryset = Shop.objects.filter(time_open__lt=time_now, time_closed__gt=time_now, city=city) 
             queryset = list(chain(nigth_shit_queryset, day_shift_queryset))
             
         elif street and open == "1":
-            nigth_shit_queryset = Shop.objects.filter(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now),
-                                                      Q(street=street))
+            nigth_shit_queryset = Shop.objects.filter(Q(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now)),Q(street=street) | 
+                                                      Q(Q(time_open__gt=F('time_closed')), Q(time_open__lt=time_now)), Q(street=street))
             day_shift_queryset = Shop.objects.filter(time_open__lt=time_now, time_closed__gt=time_now, street=street) 
             queryset = list(chain(nigth_shit_queryset, day_shift_queryset))
             
@@ -119,31 +126,21 @@ class New_shop(APIView):
         elif street:
             queryset = Shop.objects.filter(street=street)
 
-        #working
+
         elif open == "1":
-            nigth_shit_queryset = Shop.objects.filter(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now))
+            nigth_shit_queryset = Shop.objects.filter(Q(Q(time_open__gt=F('time_closed')), Q(time_closed__gt=time_now),Q(time_open__gt=time_now)) | 
+                                                      Q(Q(time_open__gt=F('time_closed')), Q(time_open__lt=time_now)))
             day_shift_queryset = Shop.objects.filter(time_open__lt=time_now, time_closed__gt=time_now) 
             queryset = list(chain(nigth_shit_queryset, day_shift_queryset))
-            
-            print("yes")
-            print(nigth_shit_queryset)
-            print()
-            print(day_shift_queryset)
+
             
             
         elif open == "0":
             nigth_shit_queryset = Shop.objects.filter(Q(Q(time_open__gt=F('time_closed')), Q(time_closed__lt=time_now),Q(time_open__gt=time_now)))
-            
-            
             day_shift_queryset = Shop.objects.filter(Q(time_open__lt=F('time_closed')), 
                                                      Q(Q(time_open__gt=time_now) , Q(time_closed__gt=time_now))| 
                                                      Q(Q(time_open__lt=time_now) , Q(time_closed__lt=time_now)))
             queryset = list(chain(nigth_shit_queryset, day_shift_queryset))
-            
-            print("no")
-            print(nigth_shit_queryset)
-            print()
-            print(day_shift_queryset)
 
         else:
             queryset = Shop.objects.all()
