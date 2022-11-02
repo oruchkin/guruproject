@@ -1,7 +1,9 @@
-# django 4.1.3
+""" django 4.1.3 """
 from split_settings.tools import include
 from pathlib import Path
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 include(
     'components/auth_password_validators.py',
@@ -13,7 +15,7 @@ include(
 
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
-SECRET_KEY = 'django-insecure-)#ij$0xb(jgr9da5l&=mqhhbf^)pu814$29*=+d7jtgd0$-6n@'
+SECRET_KEY = os.environ.get('SECRET_KEY', default=None),
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_URLCONF = 'guruproject.urls'
